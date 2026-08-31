@@ -11,9 +11,9 @@ You (the main session) delegate the user's implementation task to an **implement
 
 ## Step 0 — the task
 
-The user's request is everything in `$ARGUMENTS`.
+The user's request is everything they passed when invoking the skill — `$ARGUMENTS`.
 
-- If `$ARGUMENTS` is empty: stop and ask the user what they want implemented. Never infer the task from conversation history on your own; an explicit task is required before anything is spawned.
+- If the argument is empty: stop and ask the user what they want implemented. Never infer the task from conversation history on your own; an explicit task is required before anything is spawned.
 - If it references something from the current conversation ("implement the plan we agreed on"), that referenced material is part of the task — you must pass its full substance along, because the orchestrator cannot see this conversation.
 
 ## Step 1 — parse modifiers
@@ -35,8 +35,8 @@ Read [orchestrator-brief.md](orchestrator-brief.md) and compose each orchestrato
 
 Spawn mechanics:
 
-- Use the Agent tool with `subagent_type: "general-purpose"`. Do not use a custom agent type, even one with "orchestrator" in its name.
-- Do not pass a `model` override — the orchestrator must inherit this session's model so it works at the same capability/effort level as you.
+- Use your environment's subagent-spawning tool. If it takes an agent type, pick the general-purpose one — never a custom agent type, even one with "orchestrator" in its name.
+- Spawn the orchestrator at this session's own model/effort level wherever your environment allows it — e.g. don't pass a model override that would downgrade it; inheriting the session's model is typically the default.
 - **Single orchestrator (the default):** hand it the entire task.
 - **Multiple orchestrators (only when the user asked for them):**
   - Honor the user's split and ordering if they gave one; that always takes precedence.

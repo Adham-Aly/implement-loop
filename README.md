@@ -1,6 +1,8 @@
 # implement
 
-A [Claude Code](https://code.claude.com) skill that keeps your main session lightweight. `/implement <task>` hands the whole job to an **implementation orchestrator** — a subagent at your session's own model that plans, implements, self-reviews, and reports back, optionally fanning out to up to 5 subagents of its own. Your main session stays big-picture: it composes the brief, reviews the result, and verifies documentation upkeep.
+An **agent skill** that keeps your main agent session lightweight. `/implement <task>` hands the whole job to an **implementation orchestrator** — a subagent at your session's own model that plans, implements, self-reviews, and reports back, optionally fanning out to up to 5 subagents of its own. Your main session stays big-picture: it composes the brief, reviews the result, and verifies documentation upkeep.
+
+Works with any coding agent that supports the SKILL.md agent-skills format — Claude Code, Codex, Cursor, OpenCode, and the rest.
 
 ```
 main session ──▶ implementation orchestrator ──▶ up to 5 subagents
@@ -13,7 +15,7 @@ main session ──▶ implementation orchestrator ──▶ up to 5 subagents
 npx skills add Adham-Aly/implement
 ```
 
-Installs into the current project's `.claude/skills/`; add `-g` for a global install (`~/.claude/skills/`). Start a new Claude Code session (or reload skills) to pick it up.
+The [skills CLI](https://github.com/vercel-labs/skills) auto-detects the agents on your machine and asks which to install for (or target one explicitly, e.g. `-a claude-code`). Installs into the current project by default; add `-g` for a global install. Start a new agent session (or reload its skills) to pick it up.
 
 ## Usage
 
@@ -21,7 +23,7 @@ Installs into the current project's `.claude/skills/`; add `-g` for a global ins
 /implement <anything — a feature, a plan you've discussed, a tiny change>
 ```
 
-User-invoked only (`disable-model-invocation`) — Claude never triggers it on its own. Invoked with no argument, it asks what to implement.
+User-invoked only: the skill is marked `disable-model-invocation`, so agents that honor that flag never trigger it on their own. Invoked with no argument, it asks what to implement.
 
 ### Defaults — override any of them in your invocation
 
