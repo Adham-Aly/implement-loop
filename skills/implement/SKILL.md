@@ -23,7 +23,7 @@ Scan the user's request for modifiers that change the defaults. The user may ove
 | Default | User can override with |
 |---|---|
 | 1 implementation orchestrator | a specific number of orchestrators, and optionally how to split the work and/or which parts run parallel vs sequential |
-| Orchestrator may spawn up to 5 subagents | a different maximum, a minimum, or an exact number (applies per orchestrator unless they say otherwise) |
+| Orchestrator may spawn up to 4 subagents | a different maximum, a minimum, or an exact number (applies per orchestrator unless they say otherwise) |
 | No state-changing git by anyone | explicit permission for specific git actions (commit, branch, push, ...) |
 | No commits/branches/pushes by you | an explicit request for them |
 
@@ -42,7 +42,7 @@ Spawn mechanics:
   - Honor the user's split and ordering if they gave one; that always takes precedence.
   - Otherwise split the work yourself into scopes with disjoint file ownership. Run orchestrators in parallel wherever the work is genuinely independent (spawn those in a single message); where a piece genuinely depends on another's output, stage it sequentially after them — mixed topologies are fine (e.g. 3 in parallel, then a 4th that builds on their output).
   - Give a sequential orchestrator a concise summary of what the earlier ones did.
-  - Each orchestrator gets its own subagent budget (default: up to 5 each).
+  - Each orchestrator gets its own subagent budget (default: up to 4 each).
   - If several scopes would touch the same context/doc file (AGENTS.md etc.), assign that file's update to exactly one of them, or reconcile it yourself at review.
 
 ## Step 3 — while they run
