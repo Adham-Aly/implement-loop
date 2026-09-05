@@ -31,6 +31,7 @@ User-invoked only: the skill is marked `disable-model-invocation`, so agents tha
 |---|---|
 | One orchestrator gets the whole task | "use 3 orchestrators, split by layer" — work is split with disjoint file ownership, parallel where possible, sequential where genuinely dependent; your requested split/ordering always wins |
 | Orchestrator may spawn up to 4 subagents (per orchestrator) | "use at most 2 subagents" / "use exactly 4" / "at least 1" — it always weighs the truly optimal number, and zero is allowed |
+| Orchestrator and its subagents inherit their parent's model and effort level | "orchestrator on model X, high effort" / "orchestrator A's exploration subagents on model X + effort Y, the rest default" — any mix; anything unspecified inherits |
 | No state-changing git by anyone; read-only git allowed | "commit the result to a new branch" |
 | No tests — the run ends with lint + a code-review sanity pass by the orchestrator | (testing is deliberately out of scope; run your own workflow for it) |
 | Orchestrator fully updates affected context files (AGENTS.md, CLAUDE.md, affected skills, ...); main session verifies | — |

@@ -24,6 +24,7 @@ Scan the user's request for modifiers that change the defaults. The user may ove
 |---|---|
 | 1 implementation orchestrator | a specific number of orchestrators, and optionally how to split the work and/or which parts run parallel vs sequential |
 | Orchestrator may spawn up to 4 subagents | a different maximum, a minimum, or an exact number (applies per orchestrator unless they say otherwise) |
+| Orchestrator and its subagents inherit their parent's model/effort level | specific model and/or effort assignments — collectively, or per orchestrator / per subagent group, in any mix; anything unspecified stays inherited |
 | No state-changing git by anyone | explicit permission for specific git actions (commit, branch, push, ...) |
 | No commits/branches/pushes by you | an explicit request for them |
 
@@ -36,7 +37,7 @@ Read [orchestrator-brief.md](orchestrator-brief.md) and compose each orchestrato
 Spawn mechanics:
 
 - Use your environment's subagent-spawning tool. If it takes an agent type, pick the general-purpose one — never a custom agent type, even one with "orchestrator" in its name.
-- Spawn the orchestrator at this session's own model/effort level wherever your environment allows it — e.g. don't pass a model override that would downgrade it; inheriting the session's model is typically the default.
+- Spawn the orchestrator at this session's own model/effort level wherever your environment allows it — e.g. don't pass a model override that would downgrade it; inheriting the session's model is typically the default. If the user assigned this orchestrator a specific model/effort level (step 1), spawn it with that instead.
 - **Single orchestrator (the default):** hand it the entire task.
 - **Multiple orchestrators (only when the user asked for them):**
   - Honor the user's split and ordering if they gave one; that always takes precedence.
