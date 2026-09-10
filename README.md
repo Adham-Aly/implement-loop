@@ -1,18 +1,22 @@
-# implement
+# implement-loop
 
-An **agent skill** that keeps your main agent session lightweight. `/implement <task>` hands the whole job to an **implementation orchestrator** — a subagent at your session's own model that plans, implements, self-reviews, and reports back, optionally fanning out to up to 4 subagents of its own. Your main session stays big-picture: it composes the brief, reviews the result, and verifies documentation upkeep.
+An **agent skill** that keeps your main agent session lightweight. `/implement-loop <task>` runs the task through three sequential phases — **planning → implementation → review** — each owned by its own orchestrator subagent at your session's model. The main session never plans, implements, tests, or reviews: it creates a branch, briefs and spawns one orchestrator per phase, gates each phase's report, and talks to you. Every orchestrator may fan out to up to 4 subagents of its own.
 
 Works with any coding agent that supports the SKILL.md agent-skills format — Claude Code, Codex, Cursor, OpenCode, and the rest.
 
 ```
-main session ──▶ implementation orchestrator ──▶ up to 4 subagents
- (coordinates)      (implements + integrates)      (implement; no further nesting)
+main session ──▶ 1. planning orchestrator ───────▶ up to 4 subagents
+(coordinates,    2. implementation orchestrator ─▶ up to 4 subagents
+ talks to you)   3. review orchestrator ─────────▶ up to 4 subagents
+                    (one per phase, in sequence)     (no further nesting)
 ```
+
+Phases hand context to one another through a temporary `.implement-loop/` folder in the workspace, not through the main session's context.
 
 ## Install
 
 ```bash
-npx skills add Adham-Aly/implement
+npx skills add Adham-Aly/implement-loop
 ```
 
 The [skills CLI](https://github.com/vercel-labs/skills) auto-detects the agents on your machine and asks which to install for (or target one explicitly, e.g. `-a claude-code`). Installs into the current project by default; add `-g` for a global install. Start a new agent session (or reload its skills) to pick it up.
@@ -20,28 +24,55 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects the agents 
 ## Usage
 
 ```
-/implement <anything — a feature, a plan you've discussed, a tiny change>
+/implement-loop <anything — a feature, a plan you've discussed, a bug, a tiny change>
+/implement-loop review          # run another review pass on the current run
 ```
 
 User-invoked only: the skill is marked `disable-model-invocation`, so agents that honor that flag never trigger it on their own. Invoked with no argument, it asks what to implement.
+
+### What a run does
+
+1. **Branch** — creates and switches to a short, descriptive branch for the task (`csv-export`, not `implement-loop/csv-export`), pushing it to the remote when there is one.
+2. **Working folder** — creates `.implement-loop/` with `task.md` (the task in full) and a self-ignoring `.gitignore`.
+3. **Planning** — the planning orchestrator investigates the codebase (read-only) and writes `plan.md` plus its context file `planning.md`.
+4. **Implementation** — the implementation orchestrator executes the plan, keeps docs/context files (AGENTS.md, CLAUDE.md, …) up to date, lints, and writes `implementation.md`.
+5. **Review** — the review orchestrator works out how this particular codebase is tested (CI config, test/lint/typecheck commands, rules in AGENTS.md / CLAUDE.md / repo skills), runs those checks, exercises the change end to end — headlessly where possible — reviews the diff, fixes genuine defects, and writes `review-1.md`.
+6. **Close** — the main session summarizes the run and **offers** to commit and push. Nothing is committed without your say-so.
+
+Ask for `review` again as many times as you like: each pass is a fresh orchestrator that reads all earlier `review-N.md` files (so it doesn't repeat work) and writes its own `review-N+1.md`.
+
+### The `.implement-loop/` folder
+
+> **Important:** `.implement-loop/` is scratch space for one run. It must be deleted before the work is committed — the main session does this automatically when you accept its offer to commit, and you should do the same if you commit by hand or through another agent. Its `.gitignore` keeps it out of git in the meantime.
+
+| File | Written by | Contents |
+|---|---|---|
+| `task.md` | main session | the task in full + run constraints |
+| `plan.md` | planning orchestrator | the plan, including how the review phase should verify the change |
+| `planning.md` | planning orchestrator | phase context |
+| `implementation.md` | implementation orchestrator | phase context |
+| `review-N.md` | review orchestrator N | phase context, one per review pass |
+
+Context files are written for the next orchestrator, not for people: bullets only, strictly concise.
 
 ### Defaults — override any of them in your invocation
 
 | Default | Override example |
 |---|---|
-| One orchestrator gets the whole task | "use 3 orchestrators, split by layer" — work is split with disjoint file ownership, parallel where possible, sequential where genuinely dependent; your requested split/ordering always wins |
-| Orchestrator may spawn up to 4 subagents (per orchestrator) | "use at most 2 subagents" / "use exactly 4" / "at least 1" — it always weighs the truly optimal number, and zero is allowed |
-| Orchestrator and its subagents inherit their parent's model and effort level | "orchestrator on model X, high effort" / "orchestrator A's exploration subagents on model X + effort Y, the rest default" — any mix; anything unspecified inherits |
-| No state-changing git by anyone; read-only git allowed | "commit the result to a new branch" |
-| No tests — the run ends with lint + a code-review sanity pass by the orchestrator | (testing is deliberately out of scope; run your own workflow for it) |
-| Orchestrator fully updates affected context files (AGENTS.md, CLAUDE.md, affected skills, ...); main session verifies | — |
+| Three phases, one orchestrator each, flowing automatically | "pause after planning so I can approve the plan" |
+| Each orchestrator may spawn up to 4 subagents and honestly decides how many and in what order (parallel, sequential, mixed); zero is allowed | "review orchestrator: at most 2 subagents" / "implementation: exactly 4, all in parallel" — per orchestrator or for all |
+| Subagents may not spawn subagents (main session → orchestrator → subagent is the limit) | "let the review orchestrator's end-to-end subagent spawn up to 2 helpers" |
+| Orchestrators and subagents inherit their parent's model and effort | "planning orchestrator on model X, high effort" / "implementation subagents on model Y" — any mix; anything unspecified inherits |
+| Only the main session touches git: the task branch at the start, commit + push only after you approve | "stay on the current branch" / "commit and push when done without asking" / "let the implementation orchestrator commit" |
 
 ## Repo layout
 
 ```
-skills/implement/
-├── SKILL.md               # main-session workflow
-└── orchestrator-brief.md  # prompt template for the orchestrator
+skills/implement-loop/
+├── SKILL.md                        # main-session workflow
+├── planning-orchestrator.md        # brief template for the planning phase
+├── implementation-orchestrator.md  # brief template for the implementation phase
+└── review-orchestrator.md          # brief template for the review phase
 ```
 
 ## License
