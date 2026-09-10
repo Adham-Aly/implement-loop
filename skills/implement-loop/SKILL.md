@@ -2,7 +2,7 @@
 name: implement-loop
 description: Run a task through three delegated phases — planning, implementation, review — each owned by its own orchestrator subagent, with all shared context kept in a temporary .implement-loop/ folder so the main session stays lightweight. Takes the task as its argument; "review" reruns the review phase.
 disable-model-invocation: true
-argument-hint: [task + any modifiers (subagent budgets, models/effort, nesting, git)] | review [modifiers]
+argument-hint: "[task + any modifiers (subagent budgets, models/effort, nesting, git)] | review [modifiers]"
 ---
 
 # implement-loop
