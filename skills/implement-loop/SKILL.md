@@ -2,7 +2,7 @@
 name: implement-loop
 description: Run a task through three delegated phases — planning, implementation, review — each owned by its own orchestrator subagent, with all shared context kept in a temporary .implement-loop/ folder so the main session stays lightweight. Takes the task as its argument; "review" reruns the review phase.
 disable-model-invocation: true
-argument-hint: "[task + any modifiers (grill me, subagent budgets, models/effort, nesting, git)] | review [modifiers]"
+argument-hint: "[task + any modifiers (ask me questions first / grill me, subagent budgets, models/effort, nesting, git)] | review [modifiers]"
 ---
 
 # implement-loop
@@ -24,7 +24,7 @@ The defaults below hold unless the user's request changes them. Each override is
 | Default | The user may override with |
 |---|---|
 | Three phases, exactly one orchestrator each, run in order and flowing automatically | a pause after planning for their approval; extra instructions for any phase |
-| The planning orchestrator resolves ambiguity by assumption and records it | "grill me" (or any request to be asked questions before the plan is made): grilling is **on** — the planning orchestrator stops to question the user, as often as it needs, and you relay verbatim (Step 4, **Grilling**). Off unless asked for |
+| The planning orchestrator resolves ambiguity by assumption and records it | **any** request to be asked, questioned, interviewed, or grilled before the plan is made or before implementation — "grill me", "ask me questions first", "check with me before you plan", "clarify anything unclear with me", or any phrasing to that effect; the exact words never matter, the intent does: grilling is **on** — the planning orchestrator stops to question the user, as often as it needs, and you relay verbatim (Step 4, **Grilling**). Off only when nothing of the kind was asked |
 | Each orchestrator may spawn up to 4 subagents and decides count and ordering itself | a maximum, minimum, or exact count and/or ordering instructions — for one orchestrator, several, or all, each possibly different |
 | Subagents may not spawn subagents (nesting ends at main session → orchestrator → subagent) | permission for specific subagents of specific orchestrators to nest further, with whatever limits they state |
 | Every orchestrator and subagent inherits its parent's model and effort | model/effort per orchestrator or per subagent group, in any mix; anything unspecified inherits |
@@ -68,7 +68,7 @@ For each phase in order — planning, implementation, review — read the templa
 | Implementation | [implementation-orchestrator.md](implementation-orchestrator.md) |
 | Review | [review-orchestrator.md](review-orchestrator.md) |
 
-**Composing a prompt:** copy the template's text below its `---` line verbatim. Fill every required `{{PLACEHOLDER}}` (the planning template's `{{GRILL}}` is `on` only when the user asked to be grilled, otherwise `off`). `{{IF_… — …}}` placeholders exist only for user modifiers: when the modifier applies, replace the placeholder with the concrete instruction; when it doesn't, delete the placeholder — the surrounding text already states the default. Never edit a numbered rule beyond what a modifier requires.
+**Composing a prompt:** copy the template's text below its `---` line verbatim. Fill every required `{{PLACEHOLDER}}` (the planning template's `{{GRILL}}` is `on` when the user asked, in any wording, to be questioned before the plan — see Step 1 — and `off` otherwise). `{{IF_… — …}}` placeholders exist only for user modifiers: when the modifier applies, replace the placeholder with the concrete instruction; when it doesn't, delete the placeholder — the surrounding text already states the default. Never edit a numbered rule beyond what a modifier requires.
 
 **Spawning:** use your environment's subagent-spawning tool with its general-purpose agent type — never a custom agent type, even one with "orchestrator" in its name. Spawn at this session's own model/effort level (don't pass an override that would downgrade it) unless the user assigned that orchestrator a model/effort. One fresh orchestrator per phase; never reuse one across phases.
 

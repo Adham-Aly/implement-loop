@@ -25,7 +25,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects the agents 
 
 ```
 /implement-loop <anything — a feature, a plan you've discussed, a bug, a tiny change>
-/implement-loop <task> — grill me   # have the planner question you before it plans
+/implement-loop <task> — grill me   # or "ask me questions first": the planner questions you before it plans
 /implement-loop review              # run another review pass on the current run
 ```
 
@@ -44,7 +44,7 @@ Ask for `review` again as many times as you like: each pass is a fresh orchestra
 
 ### Grilling
 
-Add "grill me" (or words to that effect) to your invocation and the planning orchestrator will ask rather than assume: once it has investigated enough to know what is genuinely open, it stops and hands the main session a batch of questions, each with options. The main session relays them to you exactly as written — through a structured question tool if the agent has one, otherwise in chat — records your answers in `task.md`, and sends them back to the same orchestrator, which only then resumes. It may grill you more than once if your answers open new questions, but it is told to prefer one thorough round over many small ones. The main session never rewords, filters, or answers the questions itself.
+Ask, in any wording, to be questioned before the plan is made — "grill me", "ask me questions first", "clarify anything unclear with me before implementing" — and the planning orchestrator will ask rather than assume: once it has investigated enough to know what is genuinely open, it stops and hands the main session a batch of questions, each with options. The main session relays them to you exactly as written — through a structured question tool if the agent has one, otherwise in chat — records your answers in `task.md`, and sends them back to the same orchestrator, which only then resumes. It may grill you more than once if your answers open new questions, but it is told to prefer one thorough round over many small ones. The main session never rewords, filters, or answers the questions itself.
 
 ### The `.implement-loop/` folder
 
@@ -65,7 +65,7 @@ Context files are written for the next orchestrator, not for people: bullets onl
 | Default | Override example |
 |---|---|
 | Three phases, one orchestrator each, flowing automatically | "pause after planning so I can approve the plan" |
-| The planner resolves ambiguity by assumption and records it | "grill me" — the planner questions you before writing the plan |
+| The planner resolves ambiguity by assumption and records it | "grill me" / "ask me questions first" / any request to be questioned before the plan — the planner questions you before writing it |
 | Each orchestrator may spawn up to 4 plain general-purpose subagents and honestly decides how many and in what order (parallel, sequential, mixed); zero is allowed. Review subagents never edit files | "review orchestrator: at most 2 subagents" / "implementation: exactly 4, all in parallel" — per orchestrator or for all |
 | Subagents may not spawn subagents (main session → orchestrator → subagent is the limit) | "let the review orchestrator's end-to-end subagent spawn up to 2 helpers" |
 | Orchestrators and subagents inherit their parent's model and effort | "planning orchestrator on model X, high effort" / "implementation subagents on model Y" — any mix; anything unspecified inherits |
