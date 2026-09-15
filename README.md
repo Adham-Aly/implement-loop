@@ -1,6 +1,6 @@
 # implement-loop
 
-An **agent skill** that keeps your main agent session lightweight. `/implement-loop <task>` runs the task through three sequential phases — **planning → implementation → review** — each owned by its own orchestrator subagent at your session's model. The main session never plans, implements, tests, or reviews: it creates a branch, briefs and spawns one orchestrator per phase, gates each phase's report, and talks to you. Every orchestrator may fan out to up to 4 subagents of its own — always plain general-purpose agents whose only instructions are the orchestrator's prompt, never a predefined agent type.
+An **agent skill** that keeps your main agent session lightweight. `/implement-loop <task>` runs the task through three sequential phases — **planning → implementation → review** — each owned by its own orchestrator subagent at your session's model. The main session never plans, implements, tests, or reviews: it creates a worktree and branch, briefs and spawns one orchestrator per phase, gates each phase's report, and talks to you. Every orchestrator may fan out to up to 4 subagents of its own — always plain general-purpose agents whose only instructions are the orchestrator's prompt, never a predefined agent type.
 
 Works with any coding agent that supports the SKILL.md agent-skills format — Claude Code, Codex, Cursor, OpenCode, and the rest.
 
@@ -33,12 +33,12 @@ User-invoked only: the skill is marked `disable-model-invocation`, so agents tha
 
 ### What a run does
 
-1. **Branch** — creates and switches to a short, descriptive branch for the task (`csv-export`, not `implement-loop/csv-export`), pushing it to the remote when there is one.
+1. **Worktree** — creates a short, descriptive branch for the task (`csv-export`, not `implement-loop/csv-export`) in a new worktree at `../<repo>-wt/<branch>/`, pushing the branch when there is a remote. The whole run happens in that worktree.
 2. **Working folder** — creates `.implement-loop/` with `task.md` (the task in full) and a self-ignoring `.gitignore`.
 3. **Planning** — the planning orchestrator investigates the codebase (read-only) and writes `plan.md` plus its context file `planning.md`. If you asked to be grilled, it stops to question you first (see below).
 4. **Implementation** — the implementation orchestrator executes the plan, keeps docs/context files (AGENTS.md, CLAUDE.md, …) up to date, lints, and writes `implementation.md`.
 5. **Review** — the review orchestrator works out how this particular codebase is tested (CI config, test/lint/typecheck commands, rules in AGENTS.md / CLAUDE.md / repo skills), runs those checks, exercises the change end to end — headlessly where possible — reviews the diff, fixes genuine defects, and writes `review-1.md`. Its subagents are read-only: they test, investigate, and report concerns, and the orchestrator alone confirms which are real and makes every fix.
-6. **Close** — the main session summarizes the run and **offers** to commit and push. Nothing is committed without your say-so.
+6. **Close** — the main session summarizes the run and **offers** to commit and push. Nothing is committed without your say-so. It never merges on its own: ask, and it merges into the default branch, pushes, and removes the worktree and branch — stopping to ask you how to proceed if there are conflicts.
 
 Ask for `review` again as many times as you like: each pass is a fresh orchestrator that reads all earlier `review-N.md` files (so it doesn't repeat work) and writes its own `review-N+1.md`.
 
@@ -69,7 +69,8 @@ Context files are written for the next orchestrator, not for people: bullets onl
 | Each orchestrator may spawn up to 4 plain general-purpose subagents and honestly decides how many and in what order (parallel, sequential, mixed); zero is allowed. Review subagents never edit files | "review orchestrator: at most 2 subagents" / "implementation: exactly 4, all in parallel" — per orchestrator or for all |
 | Subagents may not spawn subagents (main session → orchestrator → subagent is the limit) | "let the review orchestrator's end-to-end subagent spawn up to 2 helpers" |
 | Orchestrators and subagents inherit their parent's model and effort | "planning orchestrator on model X, high effort" / "implementation subagents on model Y" — any mix; anything unspecified inherits |
-| Only the main session touches git: the task branch at the start, commit + push only after you approve | "stay on the current branch" / "commit and push when done without asking" / "let the implementation orchestrator commit" |
+| The run lives in a new worktree at `../<repo>-wt/<branch>/` on a new branch | "just a branch, no worktree" / "stay on the current branch" |
+| Only the main session touches git: worktree + branch at the start, commit + push only after you approve, merge only if you ask | "commit and push when done without asking" / "let the implementation orchestrator commit" / "merge it" |
 
 ## Repo layout
 

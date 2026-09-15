@@ -7,7 +7,7 @@ argument-hint: "[task + any modifiers (ask me questions first / grill me, subage
 
 # implement-loop
 
-You (the main session) run the user's task through three sequential phases — **planning → implementation → review** — each owned by a fresh orchestrator subagent. You never plan, implement, test, or review anything yourself. You create the branch and the working folder, brief and spawn one orchestrator per phase, gate each phase's report, and talk to the user. Everything the orchestrators need from one another lives in `.implement-loop/`, not in your context.
+You (the main session) run the user's task through three sequential phases — **planning → implementation → review** — each owned by a fresh orchestrator subagent. You never plan, implement, test, or review anything yourself. You create the worktree, branch, and working folder, brief and spawn one orchestrator per phase, gate each phase's report, and talk to the user. Everything the orchestrators need from one another lives in `.implement-loop/`, not in your context.
 
 ## Step 0 — the task
 
@@ -28,24 +28,24 @@ The defaults below hold unless the user's request changes them. Each override is
 | Each orchestrator may spawn up to 4 subagents and decides count and ordering itself | a maximum, minimum, or exact count and/or ordering instructions — for one orchestrator, several, or all, each possibly different |
 | Subagents may not spawn subagents (nesting ends at main session → orchestrator → subagent) | permission for specific subagents of specific orchestrators to nest further, with whatever limits they state |
 | Every orchestrator and subagent inherits its parent's model and effort | model/effort per orchestrator or per subagent group, in any mix; anything unspecified inherits |
-| Git: you create the task branch at the start; no other state-changing git by anyone; commit + push is only offered at the end | a different branch policy; permission to commit without asking; git permissions for an orchestrator |
+| Git: you create a worktree + task branch at the start; no other state-changing git by anyone; commit + push is only offered at the end; merge only on request | a branch without a worktree; a different branch policy; permission to commit without asking; git permissions for an orchestrator |
 
-## Step 2 — branch
+## Step 2 — worktree and branch
 
 If the workspace is a git repository:
 
 1. Pick a short kebab-case name that describes the task itself (e.g. `csv-export`, `fix-login-redirect`). No `implement-loop/` or similar prefix.
-2. Create it from the current HEAD and switch to it: `git switch -c <name>`.
-3. If a remote exists, publish it: `git push -u origin <name>`. If that fails, continue locally and mention it in your final report.
+2. Create a worktree on a new branch of that name from the current HEAD, one folder up from the workspace: `git worktree add -b <name> ../<repo>-wt/<name>` (`<repo>` = the repository's folder name).
+3. If a remote exists, publish the branch: `git -C ../<repo>-wt/<name> push -u origin <name>`. If that fails, continue locally and mention it in your final report.
 
-Do not stash, reset, or discard uncommitted changes. If the user named a branch or asked to stay on the current one, do that instead. No git repository → skip this step and say so at the end.
+The worktree is the run's workspace from here on: run your own commands in it and pass its absolute path to every orchestrator as `{{WORKSPACE}}`. Uncommitted changes stay behind in the original workspace — tell the user if there are any. If the user asked for a branch without a worktree, `git switch -c <name>` in the current workspace instead, and that stays the run's workspace; if they named a branch or asked to stay on the current one, do that. Do not stash, reset, or discard uncommitted changes. No git repository → skip this step, use the current workspace, and say so at the end.
 
 ## Step 3 — working folder
 
-Create `.implement-loop/` at the workspace root. It is the run's shared memory and it is **temporary: it must be deleted before anything is committed** (Step 5). Write two files into it:
+Create `.implement-loop/` at the root of the run's workspace (Step 2). It is the run's shared memory and it is **temporary: it must be deleted before anything is committed** (Step 5). Write two files into it:
 
 - `.gitignore` containing the single line `*`, so the folder can never be committed by accident.
-- `task.md` — the task in full (the user's words plus every referenced plan, constraint, preference, and file pointer; do not thin it into a summary), followed by a short **Run constraints** list: the branch name and any user modifier that applies to every phase (e.g. git permissions, "don't touch the auth module").
+- `task.md` — the task in full (the user's words plus every referenced plan, constraint, preference, and file pointer; do not thin it into a summary), followed by a short **Run constraints** list: the branch name, the workspace path, and any user modifier that applies to every phase (e.g. git permissions, "don't touch the auth module").
 
 The orchestrators add the rest:
 
@@ -68,7 +68,7 @@ For each phase in order — planning, implementation, review — read the templa
 | Implementation | [implementation-orchestrator.md](implementation-orchestrator.md) |
 | Review | [review-orchestrator.md](review-orchestrator.md) |
 
-**Composing a prompt:** copy the template's text below its `---` line verbatim. Fill every required `{{PLACEHOLDER}}` (the planning template's `{{GRILL}}` is `on` when the user asked, in any wording, to be questioned before the plan — see Step 1 — and `off` otherwise). `{{IF_… — …}}` placeholders exist only for user modifiers: when the modifier applies, replace the placeholder with the concrete instruction; when it doesn't, delete the placeholder — the surrounding text already states the default. Never edit a numbered rule beyond what a modifier requires.
+**Composing a prompt:** copy the template's text below its `---` line verbatim. Fill every required `{{PLACEHOLDER}}` (`{{WORKSPACE}}` is the absolute path of the run's workspace from Step 2; the planning template's `{{GRILL}}` is `on` when the user asked, in any wording, to be questioned before the plan — see Step 1 — and `off` otherwise). `{{IF_… — …}}` placeholders exist only for user modifiers: when the modifier applies, replace the placeholder with the concrete instruction; when it doesn't, delete the placeholder — the surrounding text already states the default. Never edit a numbered rule beyond what a modifier requires.
 
 **Spawning:** use your environment's subagent-spawning tool with its general-purpose agent type — never a custom agent type, even one with "orchestrator" in its name. Spawn at this session's own model/effort level (don't pass an override that would downgrade it) unless the user assigned that orchestrator a model/effort. One fresh orchestrator per phase; never reuse one across phases.
 
@@ -99,21 +99,29 @@ When the review phase reports, read `implementation.md` and the latest `review-N
 - what was built, and anything left out and why
 - what verification the review ran and its results; findings fixed and findings left open
 - assumptions and flags from all phases
-- the branch name and whether it was pushed
+- the branch name, the worktree path if one was created, and whether it was pushed
 
-Then **offer** to commit and push. Do not commit, push, or change git state in any other way until the user says yes (unless they pre-authorized it in the invocation). When you do, **delete `.implement-loop/` first** — its job ends when the work is committed. Mention that they can instead ask for another review pass.
+Then **offer** to commit and push. Do not commit, push, or change git state in any other way until the user says yes (unless they pre-authorized it in the invocation). When you do, **delete `.implement-loop/` first** — its job ends when the work is committed. Mention that they can instead ask for another review pass. Do not merge unless asked (below).
 
 ## Review rerun
 
 The user may rerun the review phase as often as they like before committing — from this session or a later one, as long as `.implement-loop/` still exists.
 
-1. Confirm `.implement-loop/implementation.md` exists; if not, tell the user there is no run to review.
+1. Confirm `.implement-loop/implementation.md` exists in the run's workspace (the worktree, if one was created); if not, tell the user there is no run to review.
 2. Set N = 1 + the highest existing `review-N.md` number.
 3. Compose the review brief with that N and whatever modifiers the user gave for this rerun, spawn a **new** review orchestrator (never re-message a previous one), gate it, and close as in Step 5.
+
+## Merge — only when the user asks
+
+Never by default — the user may prefer to merge on their git host. When asked, with the run already committed (Step 5):
+
+1. In the original workspace, not the worktree: `git switch <default branch>`, `git merge <name>`, `git push`.
+2. Then clean up: `git worktree remove ../<repo>-wt/<name>` (skip if there is no worktree), `git branch -d <name>`, `git push origin --delete <name>`.
+3. **Conflicts:** stop, tell the user, and ask whether you should resolve them (and any guidance they have) or leave them to the user — unless they told you to resolve conflicts when asking for the merge. Do nothing further until they answer.
 
 ## Hard boundaries for you
 
 - **You never plan, implement, test, or review** — not even a small fix or a doc update. Anything wrong goes back to an orchestrator.
 - **Grilling questions pass through you untouched**, in both directions. You never rephrase, filter, explain, or answer them, and you never reason about them.
-- **Git:** the branch in Step 2 and a commit/push the user explicitly approved are your only state-changing git actions; read-only git is fine. If the user asks to commit mid-run, warn that `.implement-loop/` will be deleted and later phases lose their context, and proceed only on confirmation.
+- **Git:** the worktree/branch in Step 2, a commit/push the user explicitly approved, and a merge the user asked for are your only state-changing git actions; read-only git is fine. If the user asks to commit mid-run, warn that `.implement-loop/` will be deleted and later phases lose their context, and proceed only on confirmation.
 - **Keep your context small:** orchestrator reports and the context files are all you read from the run.
