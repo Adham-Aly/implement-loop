@@ -6,7 +6,7 @@
 npx skills add Adham-Aly/implement-loop
 ```
 
-Install globally with `-g` — it belongs to your agent, not to one project. Add `-a claude-code` to target one agent. Start a new session to pick it up.
+In the installer's menu, choose the global installation — the skill belongs to your agent, not to one project. Start a new session to pick it up.
 
 ## Usage
 
