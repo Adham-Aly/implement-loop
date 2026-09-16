@@ -6,13 +6,13 @@
 npx skills add Adham-Aly/implement-loop
 ```
 
-In the installer's menu, choose the global installation — the skill belongs to your agent, not to one project. Start a new session to pick it up.
+In the installer's menu, choose the global installation: the skill belongs to your agent, not to one project. Start a new session to pick it up.
 
 ## Usage
 
 ```
 /implement-loop <a feature, a bug, a plan you discussed, a tiny change>
-/implement-loop <task> — grill me        # get questioned before the plan is written
+/implement-loop <task>, grill me         # get questioned before the plan is written
 /implement-loop review                   # another review pass on the current run
 ```
 
@@ -22,23 +22,23 @@ User-invoked only; agents never trigger it on their own.
 
 An agent skill that keeps your main session lightweight. `/implement-loop <task>` runs the task through **planning → implementation → review**, each phase owned by its own orchestrator subagent. The main session only supervises: it creates a worktree, briefs one orchestrator per phase, gates each report, and talks to you.
 
-Works with any coding agent that supports the SKILL.md format — Claude Code, Codex, Cursor, OpenCode, and the rest.
+Works with any coding agent that supports the SKILL.md format: Claude Code, Codex, Cursor, OpenCode, and the rest.
 
 ## A run
 
-1. **Worktree** — new branch on a new worktree at `../<repo>-wt/<branch>/`, pushed if there is a remote.
-2. **Planning** — read-only investigation → `plan.md` (including how to verify the change).
-3. **Implementation** — executes the plan, keeps docs current, lints.
-4. **Review** — runs the project's own checks, exercises the change end to end, reviews the diff, fixes what is real. Its subagents only report; the orchestrator alone confirms and edits.
-5. **Close** — summary, then an **offer** to commit and push. Nothing is committed without your yes. Merging happens only if you ask; on conflicts it stops and asks how to proceed.
+1. **Worktree.** New branch on a new worktree at `../<repo>-wt/<branch>/`, pushed if there is a remote.
+2. **Planning.** Read-only investigation → `plan.md` (including how to verify the change).
+3. **Implementation.** Executes the plan, keeps docs current, lints.
+4. **Review.** Runs the project's own checks, exercises the change end to end, reviews the diff, fixes what is real. Its subagents only report; the orchestrator alone confirms and edits.
+5. **Close.** Summary, then an **offer** to commit and push. Nothing is committed without your yes. Merging happens only if you ask; on conflicts it stops and asks how to proceed.
 
-Phases hand context to one another through `.implement-loop/`, a git-ignored scratch folder in the worktree — never through the main session. The main session writes `task.md` (the task in full, run constraints, grilling answers); each orchestrator reads what came before and leaves a strictly concise context file for the next (`plan.md` + `planning.md`, `implementation.md`, `review-N.md` — one per review pass, never overwritten). The folder is **deleted before the work is committed**; the main session does this when you accept its commit offer.
+Phases hand context to one another through `.implement-loop/`, a git-ignored scratch folder in the worktree, never through the main session. The main session writes `task.md` (the task in full, run constraints, grilling answers); each orchestrator reads what came before and leaves a strictly concise context file for the next (`plan.md` + `planning.md`, `implementation.md`, `review-N.md`, one per review pass, never overwritten). The folder is **deleted before the work is committed**; the main session does this when you accept its commit offer.
 
 ![Architecture: main session, three orchestrators, their subagents, and the shared .implement-loop folder](assets/architecture.svg)
 
 ## Grilling
 
-Ask to be questioned in any wording — "grill me", "ask me questions first" — and the planner interviews you before writing the plan: the decisions it must not make for you, and any reading of your request it could have gotten wrong. The main session relays everything verbatim in both directions.
+Ask to be questioned in any wording ("grill me", "ask me questions first") and the planner interviews you before writing the plan: the decisions it must not make for you, and any reading of your request it could have gotten wrong. The main session relays everything verbatim in both directions.
 
 ## Defaults and overrides
 
