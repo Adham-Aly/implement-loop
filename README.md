@@ -18,6 +18,8 @@ Install globally with `-g` — it belongs to your agent, not to one project. Add
 
 User-invoked only; agents never trigger it on their own.
 
+## What it is
+
 An agent skill that keeps your main session lightweight. `/implement-loop <task>` runs the task through **planning → implementation → review**, each phase owned by its own orchestrator subagent. The main session only supervises: it creates a worktree, briefs one orchestrator per phase, gates each report, and talks to you.
 
 Works with any coding agent that supports the SKILL.md format — Claude Code, Codex, Cursor, OpenCode, and the rest.
