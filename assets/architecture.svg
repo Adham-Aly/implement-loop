@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/>
+    </marker>
+  </defs>
+  <rect width="960" height="520" rx="12" fill="#ffffff"/>
+
+  <!-- worktree frame -->
+  <rect x="150" y="18" width="792" height="484" rx="10" fill="none" stroke="#9CA3AF" stroke-dasharray="6 5"/>
+  <text x="166" y="40" fill="#6B7280" font-size="13">git worktree  ../&lt;repo&gt;-wt/&lt;branch&gt;/   (new branch, pushed)</text>
+
+  <!-- you -->
+  <rect x="22" y="200" width="96" height="60" rx="10" fill="#F5EDFF" stroke="#8A5CD6" stroke-width="1.5"/>
+  <text x="70" y="235" text-anchor="middle" font-weight="600" fill="#1F2937">you</text>
+
+  <!-- main session -->
+  <rect x="180" y="160" width="170" height="140" rx="10" fill="#E8F0FE" stroke="#3B6FD9" stroke-width="1.5"/>
+  <text x="265" y="190" text-anchor="middle" font-weight="600" fill="#1F2937">main session</text>
+  <text x="265" y="214" text-anchor="middle" fill="#374151" font-size="12.5">supervises only</text>
+  <text x="265" y="234" text-anchor="middle" fill="#374151" font-size="12.5">worktree · briefs · gates</text>
+  <text x="265" y="254" text-anchor="middle" fill="#374151" font-size="12.5">never plans, codes,</text>
+  <text x="265" y="272" text-anchor="middle" fill="#374151" font-size="12.5">tests or reviews</text>
+
+  <!-- you <-> main -->
+  <line x1="118" y1="230" x2="178" y2="230" stroke="#4B5563" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+  <!-- orchestrators -->
+  <g>
+    <rect x="450" y="60" width="210" height="96" rx="10" fill="#FFF4E5" stroke="#E08A1E" stroke-width="1.5"/>
+    <text x="555" y="88" text-anchor="middle" font-weight="600" fill="#1F2937">1 · planning orchestrator</text>
+    <text x="555" y="110" text-anchor="middle" fill="#374151" font-size="12.5">read-only investigation</text>
+    <text x="555" y="128" text-anchor="middle" fill="#374151" font-size="12.5">grills you if asked</text>
+    <text x="555" y="146" text-anchor="middle" fill="#374151" font-size="12.5">→ plan.md, planning.md</text>
+
+    <rect x="450" y="192" width="210" height="96" rx="10" fill="#FFF4E5" stroke="#E08A1E" stroke-width="1.5"/>
+    <text x="555" y="220" text-anchor="middle" font-weight="600" fill="#1F2937">2 · implementation orch.</text>
+    <text x="555" y="242" text-anchor="middle" fill="#374151" font-size="12.5">executes the plan, lints,</text>
+    <text x="555" y="260" text-anchor="middle" fill="#374151" font-size="12.5">keeps docs current</text>
+    <text x="555" y="278" text-anchor="middle" fill="#374151" font-size="12.5">→ implementation.md</text>
+
+    <rect x="450" y="324" width="210" height="96" rx="10" fill="#FFF4E5" stroke="#E08A1E" stroke-width="1.5"/>
+    <text x="555" y="352" text-anchor="middle" font-weight="600" fill="#1F2937">3 · review orchestrator</text>
+    <text x="555" y="374" text-anchor="middle" fill="#374151" font-size="12.5">tests, e2e, code review</text>
+    <text x="555" y="392" text-anchor="middle" fill="#374151" font-size="12.5">sole editor: verifies + fixes</text>
+    <text x="555" y="410" text-anchor="middle" fill="#374151" font-size="12.5">→ review-N.md</text>
+  </g>
+
+  <!-- main -> orchestrators -->
+  <path d="M350,200 C400,200 400,108 448,108" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M350,240 L448,240" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M350,280 C400,280 400,372 448,372" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- sequence arrows -->
+  <line x1="555" y1="156" x2="555" y2="190" stroke="#E08A1E" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="555" y1="288" x2="555" y2="322" stroke="#E08A1E" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="378" y="78" text-anchor="middle" fill="#6B7280" font-size="11.5">one fresh orchestrator</text>
+  <text x="378" y="92" text-anchor="middle" fill="#6B7280" font-size="11.5">per phase, in sequence</text>
+
+  <!-- subagents -->
+  <g fill="#F1F3F5" stroke="#8A94A6" stroke-width="1.2">
+    <rect x="740" y="70" width="150" height="26" rx="6"/><rect x="750" y="84" width="150" height="26" rx="6"/><rect x="760" y="98" width="150" height="26" rx="6"/><rect x="770" y="112" width="150" height="26" rx="6"/>
+    <rect x="740" y="202" width="150" height="26" rx="6"/><rect x="750" y="216" width="150" height="26" rx="6"/><rect x="760" y="230" width="150" height="26" rx="6"/><rect x="770" y="244" width="150" height="26" rx="6"/>
+    <rect x="740" y="334" width="150" height="26" rx="6"/><rect x="750" y="348" width="150" height="26" rx="6"/><rect x="760" y="362" width="150" height="26" rx="6"/><rect x="770" y="376" width="150" height="26" rx="6"/>
+  </g>
+  <text x="845" y="130" text-anchor="middle" fill="#1F2937" font-size="12.5" font-weight="600">up to 4 subagents</text>
+  <text x="845" y="262" text-anchor="middle" fill="#1F2937" font-size="12.5" font-weight="600">up to 4 subagents</text>
+  <text x="845" y="394" text-anchor="middle" fill="#1F2937" font-size="12.5" font-weight="600">up to 4 subagents</text>
+  <text x="845" y="152" text-anchor="middle" fill="#6B7280" font-size="11.5">plain general-purpose, no nesting</text>
+  <text x="845" y="284" text-anchor="middle" fill="#6B7280" font-size="11.5">plain general-purpose, no nesting</text>
+  <text x="845" y="416" text-anchor="middle" fill="#6B7280" font-size="11.5">read-only: report, never edit</text>
+  <line x1="660" y1="108" x2="738" y2="108" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="660" y1="240" x2="738" y2="240" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="660" y1="372" x2="738" y2="372" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- shared folder -->
+  <rect x="180" y="440" width="740" height="48" rx="10" fill="#EEF9F0" stroke="#3A9D5D" stroke-width="1.5"/>
+  <text x="196" y="460" font-weight="600" fill="#1F2937" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">.implement-loop/</text>
+  <text x="196" y="478" fill="#374151" font-size="12" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">task.md · plan.md · planning.md · implementation.md · review-N.md</text>
+  <text x="904" y="461" text-anchor="end" fill="#3A9D5D" font-size="12">shared memory between phases · git-ignored · deleted before commit</text>
+  <!-- orchestrators <-> folder -->
+  <line x1="530" y1="420" x2="530" y2="438" stroke="#3A9D5D" stroke-width="1.5" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <line x1="265" y1="300" x2="265" y2="438" stroke="#3A9D5D" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+  <text x="272" y="360" fill="#3A9D5D" font-size="11.5">writes task.md</text>
+</svg>

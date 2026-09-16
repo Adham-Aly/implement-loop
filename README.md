@@ -1,17 +1,10 @@
 # implement-loop
 
-An **agent skill** that keeps your main agent session lightweight. `/implement-loop <task>` runs the task through three sequential phases — **planning → implementation → review** — each owned by its own orchestrator subagent at your session's model. The main session never plans, implements, tests, or reviews: it creates a worktree and branch, briefs and spawns one orchestrator per phase, gates each phase's report, and talks to you. Every orchestrator may fan out to up to 4 subagents of its own — always plain general-purpose agents whose only instructions are the orchestrator's prompt, never a predefined agent type.
+An agent skill that keeps your main session lightweight. `/implement-loop <task>` runs the task through **planning → implementation → review**, each phase owned by its own orchestrator subagent. The main session only supervises: it creates a worktree, briefs one orchestrator per phase, gates each report, and talks to you.
 
-Works with any coding agent that supports the SKILL.md agent-skills format — Claude Code, Codex, Cursor, OpenCode, and the rest.
+Works with any coding agent that supports the SKILL.md format — Claude Code, Codex, Cursor, OpenCode, and the rest.
 
-```
-main session ──▶ 1. planning orchestrator ───────▶ up to 4 subagents
-(coordinates,    2. implementation orchestrator ─▶ up to 4 subagents
- talks to you)   3. review orchestrator ─────────▶ up to 4 subagents
-                    (one per phase, in sequence)     (no further nesting)
-```
-
-Phases hand context to one another through a temporary `.implement-loop/` folder in the workspace, not through the main session's context.
+![Architecture: main session, three orchestrators, their subagents, and the shared .implement-loop folder](assets/architecture.svg)
 
 ## Install
 
@@ -19,69 +12,65 @@ Phases hand context to one another through a temporary `.implement-loop/` folder
 npx skills add Adham-Aly/implement-loop
 ```
 
-The [skills CLI](https://github.com/vercel-labs/skills) auto-detects the agents on your machine and asks which to install for (or target one explicitly, e.g. `-a claude-code`). Installs into the current project by default; add `-g` for a global install. Start a new agent session (or reload its skills) to pick it up.
+Add `-g` for a global install or `-a claude-code` to target one agent. Start a new session to pick it up.
 
 ## Usage
 
 ```
-/implement-loop <anything — a feature, a plan you've discussed, a bug, a tiny change>
-/implement-loop <task> — grill me   # or "ask me questions first": the planner questions you before it plans
-/implement-loop review              # run another review pass on the current run
+/implement-loop <a feature, a bug, a plan you discussed, a tiny change>
+/implement-loop <task> — grill me        # get questioned before the plan is written
+/implement-loop review                   # another review pass on the current run
 ```
 
-User-invoked only: the skill is marked `disable-model-invocation`, so agents that honor that flag never trigger it on their own. Invoked with no argument, it asks what to implement.
+User-invoked only; agents never trigger it on their own.
 
-### What a run does
+## A run
 
-1. **Worktree** — creates a short, descriptive branch for the task (`csv-export`, not `implement-loop/csv-export`) in a new worktree at `../<repo>-wt/<branch>/`, pushing the branch when there is a remote. The whole run happens in that worktree.
-2. **Working folder** — creates `.implement-loop/` with `task.md` (the task in full) and a self-ignoring `.gitignore`.
-3. **Planning** — the planning orchestrator investigates the codebase (read-only) and writes `plan.md` plus its context file `planning.md`. If you asked to be grilled, it stops to question you first (see below).
-4. **Implementation** — the implementation orchestrator executes the plan, keeps docs/context files (AGENTS.md, CLAUDE.md, …) up to date, lints, and writes `implementation.md`.
-5. **Review** — the review orchestrator works out how this particular codebase is tested (CI config, test/lint/typecheck commands, rules in AGENTS.md / CLAUDE.md / repo skills), runs those checks, exercises the change end to end — headlessly where possible — reviews the diff, fixes genuine defects, and writes `review-1.md`. Its subagents are read-only: they test, investigate, and report concerns, and the orchestrator alone confirms which are real and makes every fix.
-6. **Close** — the main session summarizes the run and **offers** to commit and push. Nothing is committed without your say-so. It never merges on its own: ask, and it merges into the default branch, pushes, and removes the worktree and branch — stopping to ask you how to proceed if there are conflicts.
+1. **Worktree** — new branch on a new worktree at `../<repo>-wt/<branch>/`, pushed if there is a remote.
+2. **Planning** — read-only investigation → `plan.md` (including how to verify the change).
+3. **Implementation** — executes the plan, keeps docs current, lints.
+4. **Review** — runs the project's own checks, exercises the change end to end, reviews the diff, fixes what is real. Its subagents only report; the orchestrator alone confirms and edits.
+5. **Close** — summary, then an **offer** to commit and push. Nothing is committed without your yes. Merging happens only if you ask; on conflicts it stops and asks how to proceed.
 
-Ask for `review` again as many times as you like: each pass is a fresh orchestrator that reads all earlier `review-N.md` files (so it doesn't repeat work) and writes its own `review-N+1.md`.
+## Grilling
 
-### Grilling
+Ask to be questioned in any wording — "grill me", "ask me questions first" — and the planner interviews you before writing the plan: the decisions it must not make for you, and any reading of your request it could have gotten wrong. The main session relays everything verbatim in both directions.
 
-Ask, in any wording, to be questioned before the plan is made — "grill me", "ask me questions first", "clarify anything unclear with me before implementing" — and the planning orchestrator will ask rather than assume: once it has investigated enough to know what is genuinely open, it stops and hands the main session a batch of questions, each with options — both the decisions it must not make for you and any reading of your request it could have gotten wrong. The main session relays them to you exactly as written — through a structured question tool if the agent has one, otherwise in chat — records your answers in `task.md`, and sends them back to the same orchestrator, which only then resumes. It may grill you more than once if your answers open new questions, but it is told to prefer one thorough round over many small ones. The main session never rewords, filters, or answers the questions itself.
+![Grilling: the planning orchestrator stops with questions, the main session relays them and the answers verbatim](assets/grilling.svg)
 
-### The `.implement-loop/` folder
+## `.implement-loop/`
 
-> **Important:** `.implement-loop/` is scratch space for one run. It must be deleted before the work is committed — the main session does this automatically when you accept its offer to commit, and you should do the same if you commit by hand or through another agent. Its `.gitignore` keeps it out of git in the meantime.
+Scratch space for one run, git-ignored, **deleted before the work is committed** (the main session does this when you accept its commit offer).
 
-| File | Written by | Contents |
-|---|---|---|
-| `task.md` | main session | the task in full + run constraints (+ grilling questions and answers, if any) |
-| `plan.md` | planning orchestrator | the plan, including how the review phase should verify the change |
-| `planning.md` | planning orchestrator | phase context |
-| `implementation.md` | implementation orchestrator | phase context |
-| `review-N.md` | review orchestrator N | phase context, one per review pass |
+| File | Written by |
+|---|---|
+| `task.md` | main session — the task in full, run constraints, grilling answers |
+| `plan.md`, `planning.md` | planning orchestrator |
+| `implementation.md` | implementation orchestrator |
+| `review-N.md` | review orchestrator N — one per pass, never overwritten |
 
-Context files are written for the next orchestrator, not for people: bullets only, strictly concise.
+## Defaults and overrides
 
-### Defaults — override any of them in your invocation
+Say it in the invocation to change it.
 
 | Default | Override example |
 |---|---|
-| Three phases, one orchestrator each, flowing automatically | "pause after planning so I can approve the plan" |
-| The planner resolves ambiguity by assumption and records it | "grill me" / "ask me questions first" / any request to be questioned before the plan — the planner questions you before writing it |
-| Each orchestrator may spawn up to 4 plain general-purpose subagents and honestly decides how many and in what order (parallel, sequential, mixed); zero is allowed. Review subagents never edit files | "review orchestrator: at most 2 subagents" / "implementation: exactly 4, all in parallel" — per orchestrator or for all |
-| Subagents may not spawn subagents (main session → orchestrator → subagent is the limit) | "let the review orchestrator's end-to-end subagent spawn up to 2 helpers" |
-| Orchestrators and subagents inherit their parent's model and effort | "planning orchestrator on model X, high effort" / "implementation subagents on model Y" — any mix; anything unspecified inherits |
-| The run lives in a new worktree at `../<repo>-wt/<branch>/` on a new branch | "just a branch, no worktree" / "stay on the current branch" |
-| Only the main session touches git: worktree + branch at the start, commit + push only after you approve, merge only if you ask | "commit and push when done without asking" / "let the implementation orchestrator commit" / "merge it" |
+| Runs in a new worktree | "just a branch" · "stay on the current branch" |
+| Flows through all three phases | "pause after planning so I can approve the plan" |
+| Planner assumes and records ambiguities | "grill me" |
+| Up to 4 plain general-purpose subagents per orchestrator, no nesting | "review: at most 2" · "let the e2e subagent spawn 2 helpers" |
+| Everything inherits the session's model and effort | "planning orchestrator on model X, high effort" |
+| Only the main session touches git; commit and push only after you approve | "commit and push when done" · "merge it" |
 
-## Repo layout
+## Layout
 
 ```
 skills/implement-loop/
 ├── SKILL.md                        # main-session workflow
-├── planning-orchestrator.md        # brief template for the planning phase
-├── implementation-orchestrator.md  # brief template for the implementation phase
-└── review-orchestrator.md          # brief template for the review phase
+├── planning-orchestrator.md        # brief templates, one per phase
+├── implementation-orchestrator.md
+└── review-orchestrator.md
+assets/                             # README diagrams
 ```
-
-## License
 
 [MIT](LICENSE)
