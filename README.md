@@ -4,7 +4,21 @@ An agent skill that keeps your main session lightweight. `/implement-loop <task>
 
 Works with any coding agent that supports the SKILL.md format — Claude Code, Codex, Cursor, OpenCode, and the rest.
 
+## A run
+
+1. **Worktree** — new branch on a new worktree at `../<repo>-wt/<branch>/`, pushed if there is a remote.
+2. **Planning** — read-only investigation → `plan.md` (including how to verify the change).
+3. **Implementation** — executes the plan, keeps docs current, lints.
+4. **Review** — runs the project's own checks, exercises the change end to end, reviews the diff, fixes what is real. Its subagents only report; the orchestrator alone confirms and edits.
+5. **Close** — summary, then an **offer** to commit and push. Nothing is committed without your yes. Merging happens only if you ask; on conflicts it stops and asks how to proceed.
+
+Phases hand context to one another through `.implement-loop/`, a git-ignored scratch folder in the worktree — never through the main session. The main session writes `task.md` (the task in full, run constraints, grilling answers); each orchestrator reads what came before and leaves a strictly concise context file for the next (`plan.md` + `planning.md`, `implementation.md`, `review-N.md` — one per review pass, never overwritten). The folder is **deleted before the work is committed**; the main session does this when you accept its commit offer.
+
 ![Architecture: main session, three orchestrators, their subagents, and the shared .implement-loop folder](assets/architecture.svg)
+
+## Grilling
+
+Ask to be questioned in any wording — "grill me", "ask me questions first" — and the planner interviews you before writing the plan: the decisions it must not make for you, and any reading of your request it could have gotten wrong. The main session relays everything verbatim in both directions.
 
 ## Install
 
@@ -23,31 +37,6 @@ Add `-g` for a global install or `-a claude-code` to target one agent. Start a n
 ```
 
 User-invoked only; agents never trigger it on their own.
-
-## A run
-
-1. **Worktree** — new branch on a new worktree at `../<repo>-wt/<branch>/`, pushed if there is a remote.
-2. **Planning** — read-only investigation → `plan.md` (including how to verify the change).
-3. **Implementation** — executes the plan, keeps docs current, lints.
-4. **Review** — runs the project's own checks, exercises the change end to end, reviews the diff, fixes what is real. Its subagents only report; the orchestrator alone confirms and edits.
-5. **Close** — summary, then an **offer** to commit and push. Nothing is committed without your yes. Merging happens only if you ask; on conflicts it stops and asks how to proceed.
-
-## Grilling
-
-Ask to be questioned in any wording — "grill me", "ask me questions first" — and the planner interviews you before writing the plan: the decisions it must not make for you, and any reading of your request it could have gotten wrong. The main session relays everything verbatim in both directions.
-
-![Grilling: the planning orchestrator stops with questions, the main session relays them and the answers verbatim](assets/grilling.svg)
-
-## `.implement-loop/`
-
-Scratch space for one run, git-ignored, **deleted before the work is committed** (the main session does this when you accept its commit offer).
-
-| File | Written by |
-|---|---|
-| `task.md` | main session — the task in full, run constraints, grilling answers |
-| `plan.md`, `planning.md` | planning orchestrator |
-| `implementation.md` | implementation orchestrator |
-| `review-N.md` | review orchestrator N — one per pass, never overwritten |
 
 ## Defaults and overrides
 
@@ -70,7 +59,7 @@ skills/implement-loop/
 ├── planning-orchestrator.md        # brief templates, one per phase
 ├── implementation-orchestrator.md
 └── review-orchestrator.md
-assets/                             # README diagrams
+assets/                             # README diagram
 ```
 
 [MIT](LICENSE)
