@@ -30,7 +30,7 @@ Works with any coding agent that supports the SKILL.md format: Claude Code, Code
 2. **Planning.** Read-only investigation → `plan.md` (including how to verify the change).
 3. **Implementation.** Executes the plan, keeps docs current, lints.
 4. **Review.** Runs the project's own checks, exercises the change end to end, reviews the diff, fixes what is real. Its subagents only report; the orchestrator alone confirms and edits.
-5. **Close.** Summary, then an **offer** to commit and push, and to merge into the default branch and delete the worktree and branch. Nothing happens without your yes, given at the start, mid-run, or at the end. An unattended merge resolves conflicts itself; an interactive one stops and asks.
+5. **Close.** Summary, then an **offer** to commit and push, and to merge into the default branch and delete the worktree and branch. Nothing happens without your yes, given at the start, mid-run, or at the end. Conflicts are resolved automatically unless you say otherwise, and any variation (a different target branch, push only, merge only if clean) is honoured.
 
 Phases hand context to one another through `.implement-loop/`, a git-ignored scratch folder in the worktree, never through the main session. The main session writes `task.md` (the task in full, run constraints, grilling answers); each orchestrator reads what came before and leaves a strictly concise context file for the next (`plan.md` + `planning.md`, `implementation.md`, `review-N.md`, one per review pass, never overwritten). The folder is **deleted before the work is committed**; the main session does this when you accept its commit offer.
 

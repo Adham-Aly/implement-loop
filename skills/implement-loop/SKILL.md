@@ -113,15 +113,15 @@ The user may rerun the review phase as often as they like before committing — 
 
 ## Merge and clean up — only when the user asks
 
-Never by default — the user may prefer to merge on their git host. The user may ask in the invocation, mid-run, or after any number of review passes; if asked in advance, do it right after the commit + push without asking again. With the run committed (Step 5):
+Never by default — the user may prefer to merge on their git host. The user may ask in the invocation, mid-run, or after any number of review passes; if asked in advance, do it right after the commit + push without asking again. The steps below are the default shape; the user may vary any part of it — a target other than the default branch, commit + push only with no merge, merge only if there are no conflicts, and so on — and you follow that instead. With the run committed (Step 5):
 
 1. In the original workspace, not the worktree: `git switch <default branch>`, `git merge <name>`, `git push`.
-2. Then clean up: `git worktree remove ../<repo>-wt/<name>` (skip if there is no worktree), `git branch -d <name>`, `git push origin --delete <name>`.
-3. **Conflicts:** if the user pre-authorized the merge, or told you to resolve conflicts when asking for it, resolve them yourself and continue. Otherwise stop, tell the user, and ask whether you should resolve them (and any guidance they have) or leave them to the user; do nothing further until they answer.
+2. Then clean up: `git worktree remove ../<repo>-wt/<name>` (skip if there is no worktree), `git branch -d <name>`, `git push origin --delete <name>`. A merged branch is always deleted, and a deleted branch always takes its worktree with it — whatever else the user varied.
+3. **Conflicts:** resolve them yourself and continue — that is the default for any merge the user asked for — unless they said otherwise (e.g. merge only if clean, or ask first). If asked to stop, tell them what conflicts and wait.
 
 ## Hard boundaries for you
 
 - **You never plan, implement, test, or review** — not even a small fix or a doc update. Anything wrong goes back to an orchestrator.
 - **Grilling questions pass through you untouched**, in both directions. You never rephrase, filter, explain, or answer them, and you never reason about them.
-- **Git:** the worktree/branch in Step 2, a commit/push the user approved, and a merge + cleanup the user asked for are your only state-changing git actions; read-only git is fine. If the user asks to commit mid-run, warn that `.implement-loop/` will be deleted and later phases lose their context, and proceed only on confirmation.
+- **Git:** the worktree/branch in Step 2, a commit/push the user approved, and a merge + cleanup the user asked for are your only state-changing git actions; read-only git is fine. Other worktrees and branches on the machine are not yours: never touch them unless the user asks. If the user asks to commit mid-run, warn that `.implement-loop/` will be deleted and later phases lose their context, and proceed only on confirmation.
 - **Keep your context small:** orchestrator reports and the context files are all you read from the run.
