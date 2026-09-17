@@ -28,7 +28,7 @@ The defaults below hold unless the user's request changes them. Each override is
 | Each orchestrator may spawn up to 4 subagents and decides count and ordering itself | a maximum, minimum, or exact count and/or ordering instructions — for one orchestrator, several, or all, each possibly different |
 | Subagents may not spawn subagents (nesting ends at main session → orchestrator → subagent) | permission for specific subagents of specific orchestrators to nest further, with whatever limits they state |
 | Every orchestrator and subagent inherits its parent's model and effort | model/effort per orchestrator or per subagent group, in any mix; anything unspecified inherits |
-| Git: you create a worktree + task branch at the start; no other state-changing git by anyone; commit + push is only offered at the end; merge only on request | a branch without a worktree; a different branch policy; permission to commit without asking; git permissions for an orchestrator |
+| Git: you create a worktree + task branch at the start; no other state-changing git by anyone; commit + push is only offered at the end; merge only on request | a branch without a worktree; a different branch policy; permission to commit + push without asking, and optionally to then merge and clean up too — given in the invocation or at any later point; git permissions for an orchestrator |
 
 ## Step 2 — worktree and branch
 
@@ -101,7 +101,7 @@ When the review phase reports, read `implementation.md` and the latest `review-N
 - assumptions and flags from all phases
 - the branch name, the worktree path if one was created, and whether it was pushed
 
-Then **offer** to commit and push. Do not commit, push, or change git state in any other way until the user says yes (unless they pre-authorized it in the invocation). When you do, **delete `.implement-loop/` first** — its job ends when the work is committed. Mention that they can instead ask for another review pass. Do not merge unless asked (below).
+Then **offer** to commit and push, and to merge and clean up after that (below). Do not commit, push, or change git state in any other way until the user says yes (unless they pre-authorized it, in the invocation or at any point since). When you do, **delete `.implement-loop/` first** — its job ends when the work is committed. Mention that they can instead ask for another review pass.
 
 ## Review rerun
 
@@ -111,17 +111,17 @@ The user may rerun the review phase as often as they like before committing — 
 2. Set N = 1 + the highest existing `review-N.md` number.
 3. Compose the review brief with that N and whatever modifiers the user gave for this rerun, spawn a **new** review orchestrator (never re-message a previous one), gate it, and close as in Step 5.
 
-## Merge — only when the user asks
+## Merge and clean up — only when the user asks
 
-Never by default — the user may prefer to merge on their git host. When asked, with the run already committed (Step 5):
+Never by default — the user may prefer to merge on their git host. The user may ask in the invocation, mid-run, or after any number of review passes; if asked in advance, do it right after the commit + push without asking again. With the run committed (Step 5):
 
 1. In the original workspace, not the worktree: `git switch <default branch>`, `git merge <name>`, `git push`.
 2. Then clean up: `git worktree remove ../<repo>-wt/<name>` (skip if there is no worktree), `git branch -d <name>`, `git push origin --delete <name>`.
-3. **Conflicts:** stop, tell the user, and ask whether you should resolve them (and any guidance they have) or leave them to the user — unless they told you to resolve conflicts when asking for the merge. Do nothing further until they answer.
+3. **Conflicts:** if the user pre-authorized the merge, or told you to resolve conflicts when asking for it, resolve them yourself and continue. Otherwise stop, tell the user, and ask whether you should resolve them (and any guidance they have) or leave them to the user; do nothing further until they answer.
 
 ## Hard boundaries for you
 
 - **You never plan, implement, test, or review** — not even a small fix or a doc update. Anything wrong goes back to an orchestrator.
 - **Grilling questions pass through you untouched**, in both directions. You never rephrase, filter, explain, or answer them, and you never reason about them.
-- **Git:** the worktree/branch in Step 2, a commit/push the user explicitly approved, and a merge the user asked for are your only state-changing git actions; read-only git is fine. If the user asks to commit mid-run, warn that `.implement-loop/` will be deleted and later phases lose their context, and proceed only on confirmation.
+- **Git:** the worktree/branch in Step 2, a commit/push the user approved, and a merge + cleanup the user asked for are your only state-changing git actions; read-only git is fine. If the user asks to commit mid-run, warn that `.implement-loop/` will be deleted and later phases lose their context, and proceed only on confirmation.
 - **Keep your context small:** orchestrator reports and the context files are all you read from the run.
